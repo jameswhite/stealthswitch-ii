@@ -8,7 +8,7 @@ sub new {
     my $self = {};
     my $cnstr = shift if @_;
     bless($self,$class);
-    foreach my $argument ("input","buttons"){
+    foreach my $argument ("input","pedals"){
         $self->{$argument} = $cnstr->{$argument} if($cnstr->{$argument});
     }
     POE::Session->create(
@@ -48,8 +48,8 @@ sub do_event {
         while(my $inspector = shift(@{ $heap->{'events'} })){
            $counter++ if($inspector eq "UP"); 
         }
-        if(defined($self->{'buttons'}->{'a'}->[$counter - 1])){
-            &{ $self->{'buttons'}->{'a'}->[$counter - 1 ] };
+        if(defined($self->{'pedals'}->{'a'}->[$counter - 1])){
+            &{ $self->{'pedals'}->{'a'}->[$counter - 1 ] };
         }else{
             print STDERR "no subroutine for $counter clicks provided.\n";
         }

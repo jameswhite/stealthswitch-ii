@@ -29,7 +29,7 @@ my $url = "http://eir.eftdomain.net:8000";
 
 my $pw  = PedalWatcher->new({ 
                               'input'   => $device_id,
-                              'buttons' => {   
+                              'pedals'  => {   
                                              'a' => [ 
                                                       sub {
                                                             print "one clicks\n";
