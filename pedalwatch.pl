@@ -1,5 +1,4 @@
 #!/usr/bin/env perl
-use POE::Wheel::Run;
 ################################################################################
 BEGIN {
         # figure out where we are and include our relative lib directory
@@ -23,16 +22,16 @@ BEGIN {
 ################################################################################
 package PedalWatcher;
 
-use POE qw(Wheel::FollowTail);
+use POE::Wheel::Run;
 use LWP;
-use Data::Dumper; 
+use Time::HiRes;
 
 sub new {
     my $class = shift;
     my $self = {};
     my $cnstr = shift if @_;
     bless($self,$class);
-    foreach my $argument ("input"){
+    foreach my $argument ("input","delay_ms"){
         $self->{$argument} = $cnstr->{$argument} if($cnstr->{$argument});
     }
     POE::Session->create(
@@ -41,8 +40,9 @@ sub new {
                                                         'button_1_down',
                                                         'button_1_up',
                                                         'repeat',
+                                                        'rhythmote_action',
                                                         '_start',
-                                                        'say',
+                                                        'do_event',
                                                         'spawn',
                                                         'on_child_stdout',
                                                         'on_child_stderr',
@@ -58,34 +58,75 @@ sub new {
 sub _start {
     my ($self, $kernel, $heap, $sender, @args) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
     if(defined($self->{'input'})){
-        $kernel->yield('spawn', ["./foo",$self->{'input'}],'say');
+        $kernel->yield('spawn', ["./pedal_watcher",$self->{'input'}],'say');
     }
     return;
 }
 
-sub say {
+sub do_event {
     my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
-    print STDERR "$what\n";
+
+    # dump the events to stdout
+    if(defined($heap->{'seq_start'})){ 
+        #my $now = [ Time::HiRes::gettimeofday( ) ];
+        #print "start: ".join(" ",@{ $heap->{'seq_start'} })."\n";
+        #print join(",",@{ $heap->{'events'} })."\n";
+        #print " stop: ".join(" ",@{ $now })."\n";
+        my $counter = 0;
+        while(my $inspector = shift(@{ $heap->{'events'} })){
+           $counter++ if($inspector eq "UP"); 
+        }
+        if($counter == 1){
+            print "next\n";
+            $kernel->yield('rhythmote_action', 'next');
+        }elsif($counter == 2){
+            print "prev\n";
+            $kernel->yield('rhythmote_action', 'prev');
+        }elsif($counter == 3){
+            print "play\n";
+            $kernel->yield('rhythmote_action', 'play');
+        }else{
+            print "$counter\n";
+        }
+    }
+
+    # clear the events an the timer
+    $heap->{'events'} = [];
+    $heap->{'seq_start'} = undef;
 }
 
 sub button_1_down {
     my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
-    print STDERR "BUTTON 1 DOWN\n";
+
+    # Start watching the clock as soon as the first pedal goes down
+    unless(defined($heap->{'seq_start'})){ 
+        $heap->{'seq_start'} = [ Time::HiRes::gettimeofday( ) ];
+    }
+
+    # but always track the event
+    push(@{ $heap->{'events'} }, "DOWN");
 }
 
 sub button_1_up {
     my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
-    print STDERR "BUTTON 1 UP\n";
-    my $browser = LWP::UserAgent->new;
-    my $action= 'next';
-    my $url = 'http://eir.eftdomain.net:8000';
-    my $response = $browser->post( $url, [ 'action' => $action ]);
 
+    # events will occur 1 second after the last pedal is released
+    $kernel->delay('do_event',1);
+
+    # but always track the event
+    push(@{ $heap->{'events'} }, "UP");
 }
 
 sub repeat {
     my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
-    print STDERR "REPEAT\n";
+    push(@{ $heap->{'events'} }, "REPEAT");
+}
+
+sub rhythmote_action{
+    my ($self, $kernel, $heap, $sender, $action) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
+    my $browser = LWP::UserAgent->new;
+    my $url = 'http://eir.eftdomain.net:8000';
+    my $response = $browser->post( $url, [ 'action' => $action ]);
 }
 
 sub spawn{
@@ -164,6 +205,9 @@ sub on_child_signal {
 1;
 
 $|=1;
-my $pw  = PedalWatcher->new({ 'input'     => '/dev/input/event7' });
+my $pw  = PedalWatcher->new({ 
+                              'input'     => '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd',
+                              'delay_ms'  => 500,
+                           });
 POE::Kernel->run();
 exit;
