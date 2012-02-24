@@ -27,24 +27,27 @@ use LWP;
 my $device_id = '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd';
 my $url = "http://eir:8000";
 
+sub rhythmote_action{
+    my $action = shift;
+    my $poster = LWP::UserAgent->new;
+    $poster->post($url,["action" => $action]);
+}
+
 my $pw  = PedalWatcher->new({ 
                               'input'   => $device_id,
                               'pedals'  => {   
                                              'a' => [ 
                                                       sub {
-                                                            print "one clicks\n";
-                                                            my $poster = LWP::UserAgent->new;
-                                                            $poster->post($url,["action" => "next"]);
+                                                            print "one click\n";
+                                                            rhythmote_action("next");
                                                           },
                                                       sub {
                                                             print "two clicks\n";
-                                                            my $poster = LWP::UserAgent->new;
-                                                            $poster->post($url,["action" => "prev"]);
+                                                            rhythmote_action("prev");
                                                           },
                                                       sub {
                                                             print "three clicks\n";
-                                                            my $poster = LWP::UserAgent->new;
-                                                            $poster->post($url,["action" => "play"]);
+                                                            rhythmote_action("play");
                                                           },
                                                       # ... as many clicks as you want
                                                     ],
