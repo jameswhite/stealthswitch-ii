@@ -22,11 +22,33 @@ BEGIN {
 ################################################################################
 use POE::Wheel::Run;
 use PedalWatcher;
+use LWP;
 
-$|=1;
+my $device_id = '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd';
+my $url = "http://eir.eftdomain.net:8000";
+
 my $pw  = PedalWatcher->new({ 
-                              'input'     => '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd',
-                              'delay_ms'  => 500,
+                              'input'   => $device_id,
+                              'buttons' => {   
+                                             'a' => [ 
+                                                      sub {
+                                                            print "one clicks\n";
+                                                            my $poster = LWP::UserAgent->new;
+                                                            $poster->post($url,["action" => "next"]);
+                                                          },
+                                                      sub {
+                                                            print "two clicks\n";
+                                                            my $poster = LWP::UserAgent->new;
+                                                            $poster->post($url,["action" => "prev"]);
+                                                          },
+                                                      sub {
+                                                            print "three clicks\n";
+                                                            my $poster = LWP::UserAgent->new;
+                                                            $poster->post($url,["action" => "play"]);
+                                                          },
+                                                      # ... as many clicks as you want
+                                                    ],
+                                           },
                            });
 POE::Kernel->run();
 exit;
