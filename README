@@ -1,0 +1,11 @@
+This is a little perl POE wrapper around a C binary that watches a /dev/input/<someshit> interface for "keystrokes".
+These keystrokes are what the "StealthSwitch II" use under linux. So it allows you to tie foot pedal stomps to arbitrary perl methods.
+
+It works by just forking a copy of the C binary and watching it's STDOUT for press events, and then uses POE to trigger other tasks in a non-blocking fashion.
+
+I use it to ffw / rewind songs in rhythmbox through the rythmote plug-in; But the only limit is what you can make perl do.
+
+
+You *will* have to I/O "fence" your X11 configuration so that X11 doesn't grab the stealthswitch as a keyboard. (this actually the tricky part)
+there is an example xorg.conf (mine, actually) in docs that shows an example of using the "evdev" driver (instead of "kbd") and setting the "AutoAddDevices"
+ServerFlag to "false". That's about it.

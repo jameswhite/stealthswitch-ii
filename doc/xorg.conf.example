@@ -1,0 +1,255 @@
+Section "ServerFlags"
+    Option "AutoAddDevices" "false"
+# Option "AllowEmptyInput" "true"
+# Option "Xinerama" "1"
+EndSection
+
+Section "ServerLayout"
+	Identifier     "X.org Configured"
+	Screen      0  "Screen0" 0 0
+	Screen      1  "Screen1" RightOf "Screen0"
+	Screen      2  "Screen2" RightOf "Screen1"
+	InputDevice    "Mouse0" "CorePointer"
+	InputDevice    "Keyboard0" "CoreKeyboard"
+EndSection
+
+Section "Files"
+	ModulePath   "/usr/lib/xorg/modules"
+	FontPath     "catalogue:/etc/X11/fontpath.d"
+	FontPath     "built-ins"
+EndSection
+
+Section "Module"
+	Load  "record"
+	Load  "dri"
+	Load  "dri2"
+	Load  "extmod"
+	Load  "glx"
+	Load  "dbe"
+EndSection
+
+Section "InputDevice"
+    Identifier  "Keyboard0"
+    Driver "evdev"
+    #Driver      "kbd"
+    Option "Device" "/dev/input/event2"
+    Option "XkbModel" "evdev"
+    #Option "XkbLayout" "pc105+inet"
+EndSection
+
+Section "InputDevice"
+	Identifier  "Mouse0"
+	Driver      "mouse"
+	Option	    "Protocol" "auto"
+	Option	    "Device" "/dev/input/mice"
+	Option	    "ZAxisMapping" "4 5 6 7"
+EndSection
+
+Section "Monitor"
+	Identifier   "Monitor0"
+	VendorName   "Monitor Vendor"
+	ModelName    "Monitor Model"
+EndSection
+
+Section "Monitor"
+	Identifier   "Monitor1"
+	VendorName   "Monitor Vendor"
+	ModelName    "Monitor Model"
+EndSection
+
+Section "Monitor"
+	Identifier   "Monitor2"
+	VendorName   "Monitor Vendor"
+	ModelName    "Monitor Model"
+EndSection
+
+Section "Device"
+        ### Available Driver options are:-
+        ### Values: <i>: integer, <f>: float, <bool>: "True"/"False",
+        ### <string>: "String", <freq>: "<f> Hz/kHz/MHz",
+        ### <percent>: "<f>%"
+        ### [arg]: arg optional
+        #Option     "NoAccel"            	# [<bool>]
+        #Option     "SWcursor"           	# [<bool>]
+        #Option     "Dac6Bit"            	# [<bool>]
+        #Option     "Dac8Bit"            	# [<bool>]
+        #Option     "BusType"            	# [<str>]
+        #Option     "CPPIOMode"          	# [<bool>]
+        #Option     "CPusecTimeout"      	# <i>
+        #Option     "AGPMode"            	# <i>
+        #Option     "AGPFastWrite"       	# [<bool>]
+        #Option     "AGPSize"            	# <i>
+        #Option     "GARTSize"           	# <i>
+        #Option     "RingSize"           	# <i>
+        #Option     "BufferSize"         	# <i>
+        #Option     "EnableDepthMoves"   	# [<bool>]
+        #Option     "EnablePageFlip"     	# [<bool>]
+        #Option     "NoBackBuffer"       	# [<bool>]
+        #Option     "DMAForXv"           	# [<bool>]
+        #Option     "FBTexPercent"       	# <i>
+        #Option     "DepthBits"          	# <i>
+        #Option     "PCIAPERSize"        	# <i>
+        #Option     "AccelDFS"           	# [<bool>]
+        #Option     "IgnoreEDID"         	# [<bool>]
+        #Option     "CustomEDID"         	# [<str>]
+        #Option     "DisplayPriority"    	# [<str>]
+        #Option     "PanelSize"          	# [<str>]
+        #Option     "ForceMinDotClock"   	# <freq>
+        #Option     "ColorTiling"        	# [<bool>]
+        #Option     "VideoKey"           	# <i>
+        #Option     "RageTheatreCrystal" 	# <i>
+        #Option     "RageTheatreTunerPort" 	# <i>
+        #Option     "RageTheatreCompositePort" 	# <i>
+        #Option     "RageTheatreSVideoPort" 	# <i>
+        #Option     "TunerType"          	# <i>
+        #Option     "RageTheatreMicrocPath" 	# <str>
+        #Option     "RageTheatreMicrocType" 	# <str>
+        #Option     "ScalerWidth"        	# <i>
+        #Option     "RenderAccel"        	# [<bool>]
+        #Option     "SubPixelOrder"      	# [<str>]
+        #Option     "ClockGating"        	# [<bool>]
+        #Option     "VGAAccess"          	# [<bool>]
+        #Option     "ReverseDDC"         	# [<bool>]
+        #Option     "LVDSProbePLL"       	# [<bool>]
+        #Option     "AccelMethod"        	# <str>
+        #Option     "DRI"                	# [<bool>]
+        #Option     "ConnectorTable"     	# <str>
+        #Option     "DefaultConnectorTable" 	# [<bool>]
+        #Option     "DefaultTMDSPLL"     	# [<bool>]
+        #Option     "TVDACLoadDetect"    	# [<bool>]
+        #Option     "ForceTVOut"         	# [<bool>]
+        #Option     "TVStandard"         	# <str>
+        #Option     "IgnoreLidStatus"    	# [<bool>]
+        #Option     "DefaultTVDACAdj"    	# [<bool>]
+        #Option     "Int10"              	# [<bool>]
+        #Option     "EXAVSync"           	# [<bool>]
+        #Option     "ATOMTVOut"          	# [<bool>]
+        #Option     "R4xxATOM"           	# [<bool>]
+        #Option     "ForceLowPowerMode"  	# [<bool>]
+        #Option     "DynamicPM"          	# [<bool>]
+        #Option     "NewPLL"             	# [<bool>]
+        #Option     "ZaphodHeads"        	# <str>
+	Identifier  "Card0"
+	Driver      "radeon"
+	BusID       "PCI:1:0:0"
+EndSection
+
+Section "Device"
+        ### Available Driver options are:-
+        ### Values: <i>: integer, <f>: float, <bool>: "True"/"False",
+        ### <string>: "String", <freq>: "<f> Hz/kHz/MHz",
+        ### <percent>: "<f>%"
+        ### [arg]: arg optional
+        #Option     "ShadowFB"           	# [<bool>]
+        #Option     "Rotate"             	# <str>
+        #Option     "fbdev"              	# <str>
+        #Option     "debug"              	# [<bool>]
+	Identifier  "Card1"
+	Driver      "fbdev"
+	BusID       "PCI:1:0:0"
+EndSection
+
+Section "Device"
+        ### Available Driver options are:-
+        ### Values: <i>: integer, <f>: float, <bool>: "True"/"False",
+        ### <string>: "String", <freq>: "<f> Hz/kHz/MHz",
+        ### <percent>: "<f>%"
+        ### [arg]: arg optional
+        #Option     "ShadowFB"           	# [<bool>]
+        #Option     "DefaultRefresh"     	# [<bool>]
+        #Option     "ModeSetClearScreen" 	# [<bool>]
+	Identifier  "Card2"
+	Driver      "vesa"
+	BusID       "PCI:1:0:0"
+EndSection
+
+Section "Screen"
+	Identifier "Screen0"
+	Device     "Card0"
+	Monitor    "Monitor0"
+	SubSection "Display"
+		Viewport   0 0
+		Depth     1
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     4
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     8
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     15
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     16
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     24
+	EndSubSection
+EndSection
+
+Section "Screen"
+	Identifier "Screen1"
+	Device     "Card1"
+	Monitor    "Monitor1"
+	SubSection "Display"
+		Viewport   0 0
+		Depth     1
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     4
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     8
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     15
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     16
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     24
+	EndSubSection
+EndSection
+
+Section "Screen"
+	Identifier "Screen2"
+	Device     "Card2"
+	Monitor    "Monitor2"
+	SubSection "Display"
+		Viewport   0 0
+		Depth     1
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     4
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     8
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     15
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     16
+	EndSubSection
+	SubSection "Display"
+		Viewport   0 0
+		Depth     24
+	EndSubSection
+EndSection
+
