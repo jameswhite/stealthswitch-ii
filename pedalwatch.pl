@@ -20,7 +20,9 @@ BEGIN {
         unshift(@INC,"$libdir") if ( -d "$libdir");
       }
 ################################################################################
+use POE::Wheel::Run;
 use PedalWatcher;
+
 $|=1;
 my $pw  = PedalWatcher->new({ 
                               'input'     => '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd',
