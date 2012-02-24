@@ -25,7 +25,7 @@ use PedalWatcher;
 use LWP;
 
 my $device_id = '/dev/input/by-id/usb-Ultimarc_Button_Joystick_Trackball_Interface-event-kbd';
-my $url = "http://eir.eftdomain.net:8000";
+my $url = "http://eir:8000";
 
 my $pw  = PedalWatcher->new({ 
                               'input'   => $device_id,
