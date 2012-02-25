@@ -33,24 +33,51 @@ sub rhythmote_action{
     $poster->post($url,["action" => $action]);
 }
 
+# create one PedalWatcher instance for each input device you have a master pedal on
 my $pw  = PedalWatcher->new({ 
+                              'debug'   => 0,
                               'input'   => $device_id,
                               'pedals'  => {   
-                                             'a' => [ 
+                                             'b' => [ 
                                                       sub {
-                                                            print "one click\n";
+                                                            print "b: one click\n";
                                                             rhythmote_action("next");
                                                           },
                                                       sub {
-                                                            print "two clicks\n";
+                                                            print "b: two clicks\n";
+                                                          },
+                                                      sub {
+                                                            print "b: three clicks\n";
+                                                          },
+                                                      # ... as many clicks as you want ...
+                                                    ],
+                                             'c' => [ 
+                                                      sub {
+                                                            print "c: one click\n";
                                                             rhythmote_action("prev");
                                                           },
                                                       sub {
-                                                            print "three clicks\n";
+                                                            print "c: two clicks\n";
+                                                          },
+                                                      sub {
+                                                            print "c: three clicks\n";
+                                                          },
+                                                      # ... as many clicks as you want ...
+                                                    ],
+                                             'd' => [ 
+                                                      sub {
+                                                            print "d: one click\n";
                                                             rhythmote_action("play");
                                                           },
-                                                      # ... as many clicks as you want
+                                                      sub {
+                                                            print "d: two clicks\n";
+                                                          },
+                                                      sub {
+                                                            print "d: three clicks\n";
+                                                          },
+                                                      # ... as many clicks as you want ...
                                                     ],
+                                           # ... as many pedals as you have ...
                                            },
                            });
 POE::Kernel->run();

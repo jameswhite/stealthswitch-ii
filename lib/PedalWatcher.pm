@@ -8,14 +8,14 @@ sub new {
     my $self = {};
     my $cnstr = shift if @_;
     bless($self,$class);
-    foreach my $argument ("input","pedals"){
+    foreach my $argument ("input","pedals","debug"){
         $self->{$argument} = $cnstr->{$argument} if($cnstr->{$argument});
     }
     POE::Session->create(
                           object_states => [
                                              $self => [
-                                                        'button_1_down',
-                                                        'button_1_up',
+                                                        'pedal_down',
+                                                        'pedal_up',
                                                         'repeat',
                                                         '_start',
                                                         'do_event',
@@ -44,24 +44,26 @@ sub do_event {
 
     # run the passed in code ref based on how many "UP"s we see
     if(defined($heap->{'seq_start'})){ 
-        my $counter = 0;
-        while(my $inspector = shift(@{ $heap->{'events'} })){
-           $counter++ if($inspector eq "UP"); 
+        foreach my $key (keys(%{ $heap->{'events'} })){
+            my $counter = 0;
+            next if($#{ $heap->{'events'}->{$key} } < 0);
+            while(my $inspector = shift(@{ $heap->{'events'}->{$key} })){
+               $counter++ if($inspector eq 'UP'); 
+            }
+            if(defined($self->{'pedals'}->{$key}->[$counter - 1])){
+                &{ $self->{'pedals'}->{$key}->[$counter - 1 ] };
+            }else{
+                print STDERR "no subroutine for [$counter] clicks on pedal [$key] provided.\n";
+            }
         }
-        if(defined($self->{'pedals'}->{'a'}->[$counter - 1])){
-            &{ $self->{'pedals'}->{'a'}->[$counter - 1 ] };
-        }else{
-            print STDERR "no subroutine for $counter clicks provided.\n";
-        }
+        # clear the events an the timer
+        $heap->{'events'}->{$key} = [];
     }
-
-    # clear the events an the timer
-    $heap->{'events'} = [];
     $heap->{'seq_start'} = undef;
 }
 
-sub button_1_down {
-    my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
+sub pedal_down {
+    my ($self, $kernel, $heap, $sender, $pedal) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
 
     # Start watching the clock as soon as the first pedal goes down
     unless(defined($heap->{'seq_start'})){ 
@@ -69,23 +71,22 @@ sub button_1_down {
     }
 
     # but always track the event
-    push(@{ $heap->{'events'} }, "DOWN");
+    push(@{ $heap->{'events'}->{$pedal} }, "DOWN");
 }
 
-sub button_1_up {
-    my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
+sub pedal_up {
+    my ($self, $kernel, $heap, $sender, $pedal) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
 
     # events will occur 1 second after the last pedal is released
     $kernel->delay('do_event',1);
 
     # but always track the event
-    push(@{ $heap->{'events'} }, "UP");
+    push(@{ $heap->{'events'}->{$pedal} }, "UP");
 }
 
 sub repeat {
     my ($self, $kernel, $heap, $sender, $what) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
     # not doing anything with this, but I've got ideas about long presses
-    push(@{ $heap->{'events'} }, "REPEAT");
 }
 
 sub spawn{
@@ -111,19 +112,59 @@ sub spawn{
     print("Child pid ", $child->PID, " started as wheel ", $child->ID, ".\n");
 }
 
+
+# a Type[1] Value[1] Code[30]
+# b Type[1] Value[1] Code[48]
+# c Type[1] Value[1] Code[46]
+# d Type[1] Value[1] Code[32]
+# e Type[1] Value[1] Code[18]
+
 sub on_child_stdout {
     my ($self, $kernel, $heap, $sender, $stdout_line, $wheel_id) = @_[OBJECT, KERNEL, HEAP, SENDER, ARG0 .. $#_];
     my $child = $_[HEAP]{children_by_wid}{$wheel_id};
-    if($stdout_line eq "Type[1] Value[1] Code[30]"){
-        $kernel->yield('button_1_down');
-    }elsif($stdout_line eq "Type[1] Value[0] Code[30]"){
-        $kernel->yield('button_1_up');
-    }elsif($stdout_line eq "Type[0] Value[1] Code[0]"){
-        $kernel->yield('repeat');
-    }else{
-        print "pid ", $child->PID, " STDOUT: $stdout_line\n";
+    my ($pedal,$direction) = ('','');
+    print STDERR "$stdout_line\n" if($self->{'debug'});
+
+    if($stdout_line eq "Type[0] Value[0] Code[0]"){
+        # set all currently DOWN keys to UP
+        foreach my $key (keys(%{ $heap->{'events'} })){
+            if($heap->{'events'}->{$key}->[ $#{ $heap->{'events'}->{$key} } ] eq 'DOWN'){
+                $kernel->yield('pedal_up',$key);
+            }
+        }
+        # we may need to kill and restart the C program here... # FIXME
+        return;
     }
-    my $device =  $_[HEAP]{device}{$wheel_id};
+    if($stdout_line eq "Type[0] Value[1] Code[0]"){
+        $kernel->yield('repeat');
+        return;
+    }
+
+    if($stdout_line     =~m/Code\[30\]/){
+        $pedal = 'a';
+    }elsif($stdout_line =~m/Code\[48\]/){
+        $pedal = 'b';
+    }elsif($stdout_line =~m/Code\[46\]/){
+        $pedal = 'c';
+    }elsif($stdout_line =~m/Code\[32\]/){
+        $pedal = 'd';
+    }elsif($stdout_line =~m/Code\[18\]/){
+        $pedal = 'e';
+    }else{
+        # someone with more pedals than me send me a pull request...
+        $pedal = '?';
+    }
+
+    if($stdout_line =~m/Value\[0\]/){
+        $direction='up';
+        $kernel->yield('pedal_up',$pedal);
+    }elsif($stdout_line =~m/Value\[1\]/){
+        $direction='down';
+        $kernel->yield('pedal_down',$pedal);
+    }else{
+        $direction='unknown';
+    }
+    print STDERR "$pedal:$direction\n" if($self->{'debug'});
 }
 
 # Wheel event, including the wheel's ID.
