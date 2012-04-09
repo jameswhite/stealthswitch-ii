@@ -1,0 +1,8 @@
+#!/bin/bash
+(cd ${HOME}/dev/git/cfengine-eft; git push)
+(cd ${HOME}/dev/git/cfengine-eft; bin/force_push pear)
+ssh root@vonbraun.lab.eftdomain.net cf-agent -K -b update
+ssh root@vonbraun.lab.eftdomain.net cf-agent -K -b httpd_server -b eft_portal_site
+ssh root@vonbraun.lab.eftdomain.net /etc/init.d/httpd restart
+echo "[DONE]"
+echo
